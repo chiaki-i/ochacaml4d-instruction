@@ -1,0 +1,10 @@
+reset (reset (1 + reset ((fun y -> control h -> y)
+                         (control f -> control g -> 2 + f 5))))
+
+(* < < 1 + < (\y. Fh. y) (Ff. Fg. 2 + f 5) > > > *)
+(* < < 1 + < Fg. 2 + f 5 > > > where f = \x. (\y. Fh. y) x *)
+(* < < 1 + < 2 + f 5 > > > where g = \x. x *)
+(* < < 1 + < 2 + (\y. Fh. y) 5 > > > *)
+(* < < 1 + < 2 + Fh. 5 > > > *)
+(* < < 1 + < 5 > > > where h = \x. 2 + x *)
+(* 6 *)
