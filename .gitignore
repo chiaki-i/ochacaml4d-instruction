@@ -1,3 +1,29 @@
+### ignore all files without extension (in three steps) ###
+### this section has to be the very beginning of the file ###
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs
+!*/
+
+### language- or os-specific files ###
+## macos
+*DS_Store
+
+## ocaml
+# project specific files
+eval*/._*
+eval*/lexer.ml
+eval*/parser.ml
+eval*/parser.mli
+
+# Unignore Makefile
+!*/Makefile
+
+# general
 *.annot
 *.cmo
 *.cma
