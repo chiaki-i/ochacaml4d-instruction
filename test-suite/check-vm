@@ -1,0 +1,45 @@
+#!/bin/bash
+TESTSUITEDIR=$(cd $(dirname $0); pwd)
+TMPFILE="/tmp/$USER-vm-tmp.txt"
+shopt -s nullglob
+
+if [ ! -d "$TESTSUITEDIR" ]; then
+  echo "Error : test-suite directory $TESTSUITEDIR not found"
+  echo "Usage: $0 compiled_program test_num..."
+elif [ ! -x "$1" ]; then
+  echo "Error : executable file not found: $1"
+  echo "Usage: $0 compiled_program test_num..."
+elif [ -z "$2" ]; then
+  echo "Error : no test_num found"
+  echo "Usage: $0 compiled_program test_num..."
+else
+  PROGRAM=$1
+  shift 1
+  SUCCESS=0
+  FAILURE=0
+  for DIR in $*; do
+    for FILE in $TESTSUITEDIR/$DIR/*.ml; do
+      cat $FILE | $PROGRAM -no-message >$TMPFILE 2>&1
+      if [ ! -e "$FILE.expected" ]; then
+	echo "No $FILE.expected found"
+      elif [ -z "`diff $TMPFILE $FILE.expected`" ]; then
+	let SUCCESS++
+	echo "Passed: $FILE"
+      else
+	let FAILURE++
+	echo "Failed: $FILE"
+	echo "----- The program ---------------------------------"
+	cat $FILE
+	echo "----- Expected result -----------------------------"
+	cat $FILE.expected
+	echo "----- Your output ---------------------------------"
+	cat $TMPFILE
+	echo "---------------------------------------------------"
+	echo ""
+      fi
+    done
+  done
+  echo "$SUCCESS test(s) passed"
+  echo "$FAILURE test(s) failed"
+  rm -f $TMPFILE
+fi
