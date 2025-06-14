@@ -1,13 +1,13 @@
 open Syntax
 
-(* defunctionalize VFun from eval9st: eval9st1 *)
+(* defunctionalize eval8st: eval9st *)
 
 (* Value *)
 type v = VNum of int
        | VFun of i * v list
        | VContS of c * s * t
        | VContC of c * s * t
-       | VArgs of v list
+       | VEmpty
 
 and c = C0
       | CSeq of i * v list * c
@@ -18,7 +18,7 @@ and i = IPush
       | IAccess of int
       | IOp of op
       | IApply
-      | IAppterm of i
+      | IReturn
       | ICur of i
       | IGrab of i
       | ISeq of i * i
@@ -38,7 +38,7 @@ let rec to_string value = match value with
   | VFun (_) -> "<VFun>"
   | VContS (_) -> "<VContS>"
   | VContC (_) -> "<VContC>"
-  | VArgs (_) -> "<VArgs>"
+  | VEmpty -> "<ε>"
 
 (* s_to_string : s -> string *)
 let rec s_to_string s =

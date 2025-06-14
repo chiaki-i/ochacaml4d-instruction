@@ -1,19 +1,17 @@
 open Syntax
 
-(* Defunctionalized interpreter with values passed via stack : eval7d wo r.s.*)
-(* refunctionalize c' *)
+(* Interpreter using combinators factored as instructions : eval8st *)
 
 (* Value *)
 type v = VNum of int
        | VFun of (c -> s -> t -> m -> v)
        | VContS of c * s * t
        | VContC of c * s * t
-       | VArgs of v list
+       | VEmpty
 
-and c = C0
-      | CSeq of c' * v list * c
+and c = s -> t -> m -> v
 
-and c' = v list -> c -> s -> t -> m -> v
+and i = v list -> c -> s -> t -> m -> v
 
 and s = v list
 
@@ -21,18 +19,24 @@ and t = TNil | Trail of (v -> t -> m -> v)
 
 and m = MNil | MCons of (c * s * t) * m
 
-
 (* to_string : v -> string *)
 let rec to_string value = match value with
     VNum (n) -> string_of_int n
   | VFun (_) -> "<VFun>"
   | VContS (_) -> "<VContS>"
   | VContC (_) -> "<VContC>"
-  | VArgs ([]) -> "[]"
-  | VArgs (v :: vs) ->
-    "[" ^ List.fold_left (fun s v -> s ^ "; " ^ to_string v)
-                         (to_string v) vs ^ "]"
+  | VEmpty -> "<ε>"
 
+(* s_to_string : s -> string *)
+let rec s_to_string s =
+  "[" ^
+  begin match s with
+    [] -> ""
+  | first :: rest ->
+    to_string first ^
+    List.fold_left (fun str v -> str ^ "; " ^ to_string v) "" rest
+  end
+  ^ "]"
 
 (* Value.print : v -> unit *)
 let print exp =

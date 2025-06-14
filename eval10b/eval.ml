@@ -50,12 +50,12 @@ let rec run_c10 c s t m = match (c, s) with
     end
   | ((ICur (is') :: is, vs) :: c, s) ->
     run_c10 ((is, vs) :: c) (VFun (is', vs) :: s) t m
-  | ((IGrab (is') :: is, vs) :: c, s) ->
+  | ((IGrab (is') :: [], vs) :: c, s) ->
     begin match s with
         VEmpty :: s ->
-        run_c10 ((is, vs) :: c) (VFun (is', vs) :: s) t m
+        run_c10 c (VFun (is', vs) :: s) t m
       | v1 :: s ->
-        run_c10 ((is', (v1 :: vs)) :: (is, vs) :: c) s t m
+        run_c10 ((is', (v1 :: vs)) :: c) s t m
       | _ -> failwith "IGrab: unexpected s"
     end
   | ((IApply :: is, vs) :: c, s) ->
@@ -63,9 +63,9 @@ let rec run_c10 c s t m = match (c, s) with
         apply10 v v1 vs ((is, vs) :: c) s t m
       | _ -> failwith "IApply: unexpected s"
     end
-  | ((IReturn :: is, vs) :: c, s) ->
+  | ((IReturn :: [], vs) :: c, s) ->
     begin match s with (v :: s) ->
-        apply10s v vs ((is, vs) :: c) s t m
+        apply10s v vs c s t m
       | _ -> failwith "IReturn: unexpected s"
     end
   | ((IPushmark :: is, vs) :: c, s) ->
@@ -115,11 +115,7 @@ and apply10 v0 v1 vs c s t m =
 
 (* apply10s : v -> v list -> c -> s -> t -> m -> v *)
 and apply10s v0 vs c s t m = match s with
-    VEmpty :: s ->
-    begin match c with
-        (([], vs) :: c) -> run_c10 c (v0 :: s) t m
-      | _ -> failwith "when VEmpty the current closure's instructions have to be empty as well"
-    end
+    VEmpty :: s -> run_c10 c (v0 :: s) t m
   | v1 :: s -> apply10 v0 v1 vs c s t m
 
 (* f10: e -> string list -> i list *)

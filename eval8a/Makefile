@@ -5,3 +5,4 @@ include $(OCAMLMAKEFILE)
 
 test : bc
 	../test-suite/check-vm ./interpreter 0 1 2 3 4
+	$(MAKE) clean

@@ -1,8 +1,7 @@
 open Syntax
 open Value
 
-(* actual calculation *)
-(* Definitional interpreter for (λ-calculus with 4 delimited continuation operations : eval1 *)
+(* Definitional interpreter for (λ-calculus with 4 delimited continuation operations : eval1s *)
 
 (* initial continuation : v -> t -> m -> v *)
 let idc v t m = match t with

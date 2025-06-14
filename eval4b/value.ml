@@ -1,28 +1,22 @@
 open Syntax
 
-(* linearize eval9st1: eval10st *)
+(* interpreter with defunctionalized continuations: eval2st *)
 
 (* Value *)
 type v = VNum of int
-       | VFun of i list * v list
+       | VFun of (v -> c -> s -> t -> m -> v)
        | VContS of c * s * t
        | VContC of c * s * t
        | VEmpty
 
-and c = (i list * v list) list
-
-and i = IPush
-      | IPushmark
-      | INum of int
-      | IAccess of int
-      | IOp of op
-      | IApply
-      | IReturn
-      | ICur of i list
-      | IGrab of i list
-      | IShift of i list | IControl of i list
-      | IShift0 of i list | IControl0 of i list
-      | IReset of i list
+and c = C0
+      | CApp of c
+      | CApp1 of c
+      | CAppS0 of c
+      | CAppS1 of e * string list * v list * c
+      | CAppS2 of e * string list * v list * c
+      | COp0 of op * c
+      | COp1 of e * string list * op * v list * c
 
 and s = v list
 
@@ -48,6 +42,16 @@ let rec s_to_string s =
     List.fold_left (fun str v -> str ^ "; " ^ to_string v) "" rest
   end
   ^ "]"
+
+(* c_to_string : c -> string *)
+let rec c_to_string cont = match cont with
+    C0 -> "<C0>"
+  | CApp (_) -> "<CApp>"
+  | CAppS1 (_, _, _, _) -> "<CAppS1>"
+  | CAppS2 (_, _, _, _) -> "<CAppS2>"
+  | CAppS0 (_) -> "<CAppS0>"
+  | COp0 (_, _) -> "<COp0>"
+  | COp1 (_, _, _, _, _) -> "<COp1>"
 
 (* Value.print : v -> unit *)
 let print exp =

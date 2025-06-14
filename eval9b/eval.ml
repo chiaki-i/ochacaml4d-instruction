@@ -6,9 +6,6 @@ open Value
 (* initial continuation *)
 let idc = C0
 
-(* mark on arg stack *)
-let mark = VArgs ([])
-
 (* cons : (v -> t -> m -> v) -> t -> t *)
 let rec cons h t = match t with
     TNil -> Trail (h)
@@ -50,28 +47,25 @@ let rec run_c9 c s t m = match (c, s) with
       | _ -> failwith "IOp: unexpected s"
     end
   | ICur (i) ->
-    run_c9 c ((VFun (i, vs)) :: s) t m
+    run_c9 c (VFun (i, vs) :: s) t m
   | IGrab (i) ->
-    begin match s with (VArgs (v2s) :: s) ->
-        begin match v2s with
-          [] -> run_c9 c ((VFun (i, vs)) :: s) t m
-        | v1 :: v2s ->
-          run_c9 (CSeq (i, (v1 :: vs), (CSeq (IApply, vs, c)))) (VArgs (v2s) :: s) t m
-        end
+    begin match s with
+        VEmpty :: s ->
+        run_c9 c (VFun (i, vs) :: s) t m
+      | v1 :: s ->
+        run_c9 (CSeq (i, (v1 :: vs), c)) s t m
       | _ -> failwith "IGrab: unexpected s"
     end
   | IApply ->
-    begin match s with (v :: VArgs (v2s) :: s) ->
-        apply9s v v2s vs c s t m
+    begin match s with (v :: v1 :: s) ->
+        apply9 v v1 vs c s t m
       | _ -> failwith "IApply: unexpected s"
     end
-  | IAppterm (i) ->
-    run_c9 (CSeq (i, vs, CSeq (IApply, vs, c))) s t m
-  | IPushmark -> run_c9 c (mark :: s) t m
-  | IPush ->
-    begin match s with v :: VArgs (v2s) :: s ->
-        run_c9 c (VArgs (v :: v2s) :: s) t m
-      | _ -> failwith "IPush: unexpected s"
+  | IPushmark -> run_c9 c (VEmpty :: s) t m
+  | IReturn ->
+    begin match s with (v :: s) ->
+        apply9s v vs c s t m
+      | _ -> failwith "IReturn: unexpected s"
     end
   | IShift (i) ->
     run_c9 (CSeq (i, VContS (c, s, t) :: vs, idc)) [] TNil m
@@ -96,20 +90,24 @@ let rec run_c9 c s t m = match (c, s) with
   end
   | _ -> failwith "run_c9: stack error"
 
-(* apply9 : v -> v -> c -> s -> t -> m -> v *)
-and apply9 v0 v1 c s t m = match v0 with
-    VFun (i, vs) -> run_c9 (CSeq (i, (v1 :: vs), c)) s t m
-  | VContS (c', s', t') -> run_c9 c' (v1 :: s') t' (MCons ((c, s, t), m))
+(* apply9 : v -> v -> v list -> c -> s -> t -> m -> v *)
+and apply9 v0 v1 vs c s t m =
+  match v0 with
+    VFun (i, vs') -> run_c9 (CSeq (i, (v1 :: vs'), c)) s t m
+  | VContS (c', s', t') ->
+    let app_c = CSeq (IReturn, vs, c) in
+    run_c9 c' (v1 :: s') t' (MCons ((app_c, s, t), m))
   | VContC (c', s', t') ->
-    run_c9 c' (v1 :: s') (apnd t' (cons (fun v t m -> run_c9 c (v :: s) t m) t)) m
+    let app_c = CSeq (IReturn, vs, c) in
+    run_c9 c' (v1 :: s') (apnd t' (cons (fun v t m -> run_c9 app_c (v :: s) t m) t)) m
   | _ -> failwith (to_string v0
                    ^ " is not a function; it can not be applied.")
 
 (* apply9s : v -> v list -> c -> s -> t -> m -> v *)
-and apply9s v0 v2s vs c s t m = match v2s with
-    [] -> run_c9 c (v0 :: s) t m
-  | v1 :: v2s ->
-    apply9 v0 v1 (CSeq (IApply, vs, c)) (VArgs (v2s) :: s) t m
+and apply9s v0 vs c s t m = match s with
+    VEmpty :: s -> run_c9 c (v0 :: s) t m
+  | v1 :: s ->
+    apply9 v0 v1 vs c s t m
 
 (* (>>) : i -> i -> i *)
 let (>>) i0 i1 = ISeq (i0, i1)
@@ -120,9 +118,9 @@ let rec f9 e xs = match e with
   | Var (x) -> IAccess (Env.offset x xs)
   | Op (e0, op, e1) ->
     f9 e1 xs >> f9 e0 xs >> IOp (op)
-  | Fun (x, e) -> ICur (f9 e (x :: xs))
+  | Fun (x, e) -> ICur (f9t e (x :: xs))
   | App (e0, e2s) ->
-    f9s e2s xs >> f9t e0 xs
+    f9s e2s xs >> f9 e0 xs >> IApply
   | Shift (x, e) -> IShift (f9 e (x :: xs))
   | Control (x, e) -> IControl (f9 e (x :: xs))
   | Shift0 (x, e) -> IShift0 (f9 e (x :: xs))
@@ -132,21 +130,21 @@ let rec f9 e xs = match e with
 (* f9s : e list -> string list -> v list -> c -> s -> t -> m -> v list *)
 and f9s e2s xs = match e2s with
     [] -> IPushmark
-  | e :: e2s -> f9s e2s xs >> f9 e xs >> IPush
+  | e :: e2s -> f9s e2s xs >> f9 e xs
 
 (* f9t : e -> string list -> v list -> c -> s -> t -> m -> v *)
 and f9t e xs = match e with
-    Num (n) -> INum n >> IApply
-  | Var (x) -> IAccess (Env.offset x xs) >> IApply
+    Num (n) -> INum n >> IReturn
+  | Var (x) -> IAccess (Env.offset x xs) >> IReturn
   | Op (e0, op, e1) ->
-    f9 e1 xs >> f9 e0 xs >> IOp (op) >> IApply
-  | Fun (x, e) -> IGrab (f9 e (x :: xs))
-  | App (e0, e2s) -> f9s e2s xs >> IAppterm (f9t e0 xs)
-  | Shift (x, e) -> IShift (f9 e (x :: xs)) >> IApply
-  | Control (x, e) -> IControl (f9 e (x :: xs)) >> IApply
-  | Shift0 (x, e) -> IShift0 (f9 e (x :: xs)) >> IApply
-  | Control0 (x, e) -> IControl0 (f9 e (x :: xs)) >> IApply
-  | Reset (e) -> IReset (f9 e xs) >> IApply
+    f9 e1 xs >> f9 e0 xs >> IOp (op) >> IReturn
+  | Fun (x, e) -> IGrab (f9t e (x :: xs))
+  | App (e0, e2s) -> f9s e2s xs >> f9 e0 xs >> IApply >> IReturn
+  | Shift (x, e) -> IShift (f9 e (x :: xs)) >> IReturn
+  | Control (x, e) -> IControl (f9 e (x :: xs)) >> IReturn
+  | Shift0 (x, e) -> IShift0 (f9 e (x :: xs)) >> IReturn
+  | Control0 (x, e) -> IControl0 (f9 e (x :: xs)) >> IReturn
+  | Reset (e) -> IReset (f9 e xs) >> IReturn
 
 (* f : e -> v *)
 let f expr = run_c9 (CSeq (f9 expr [], [], C0)) [] TNil MNil
