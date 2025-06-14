@@ -39,11 +39,11 @@ $ make
 
 ```bash
 $ ./interpreter
-(fun f -> (fun z -> f (z + 4)) 2 3) (fun x -> fun y -> x * y) (* press Control-D at the end of your input *)
+(fun f -> (fun z -> f (z + 4)) 2 3) (fun x -> fun y -> x * y) # press Control-D
 Parsed : ((fun f -> ((fun z -> (f (z + 4))) 2 3)) (fun x -> (fun y -> (x * y))))
 Result : 18
 $ ./interpreter
-reset (2 * reset (1 + (shift h -> (shift f -> h (f 3))))) # press Control-D at the end of your input
+reset (2 * reset (1 + (shift h -> (shift f -> h (f 3))))) # press Control-D
 Parsed : reset ((2 * reset ((1 + (shift h -> (shift f -> (h (f 3))))))))
 Result : 8
 ```
