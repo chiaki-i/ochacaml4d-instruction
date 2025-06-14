@@ -1,27 +1,28 @@
 # ochacaml4d-instruction
 
-This repository contains implementations of Delimited continuation operators' Abstract Machine (DAM).
-DAM extends the ZINC Abstract Machine instruction set with four delimited continuation operators.
+This repository contains implementations of Delimited continuation operators' Abstract Machine (DAM) for a new language called OchaCaml4D.
+
+DAM extends the [ZINC Abstract Machine](https://caml.inria.fr/pub/papers/xleroy-zinc.pdf) instruction set with four delimited continuation operators.
+A distinctive feature of DAM is that it is derived through a series of straightforward program transformations from a [continuation-passing-style definitional interpreter](https://link.springer.com/article/10.1007/s10990-007-9010-4).
 
 ## Structure of this repository
 
-The repository contains multiple implementation versions that follow different derivation paths.
-Each implementation represents a specific stage in the development of DAM.
-The folders are organized chronologically and by feature implementation, allowing you to trace the evolution of the abstract machine design.
+The repository contains multiple implementation versions that follow derivation paths.
+Each implementation corresponds to the specific derivation steps in the paper.
 
 ## Installation and usage
 
 ### Prerequisites
 
 - Save [OcamlMakefile](https://github.com/mmottl/ocaml-makefile/blob/master/OCamlMakefile) as `~/include/OCamlMakefile`
-  - If you want to save OcamlMakefile in a different location, modify the `OCAMLMAKEFILE` value in each `step*/Makefile` to the desired local path.
+  - If you want to save OcamlMakefile in a different location, modify the `OCAMLMAKEFILE` value in each `eval*/Makefile` to the desired local path.
 
 ### Running the interpreter
 
-- Navigate to the implementation folder you want to run (e.g., `eval1a`).
+- Navigate to the implementation folder you want to run (e.g., `eval01a`).
 
 ```bash
-$ cd eval1a
+$ cd eval01a
 ```
 
 - Compile the code, which will create an executable file named `./interpreter` in the same folder.
@@ -58,16 +59,16 @@ $ make clean
 
 The `test-suite` folder contains code for testing the behavior of this interpreter.
 
-- To run all test cases at once, navigate to the folder you want to test (e.g., `eval1a`) and execute the `make test` command.
+- To run all test cases at once, navigate to the folder you want to test (e.g., `eval01a`) and execute the `make test` command.
   - This will run all the prepared test cases and output their logs.
 
 ```bash
-$ cd eval1a
+$ cd eval01a
 $ make test
-Passed: /.../ochacaml4d-derive-instruction/test-suite/0/appterm.ml
-Passed: /.../ochacaml4d-derive-instruction/test-suite/0/nested-app.ml
+Passed: /.../ochacaml4d-instruction/test-suite/0/appterm.ml
+Passed: /.../ochacaml4d-instruction/test-suite/0/nested-app.ml
 ...
-Passed: /.../ochacaml4d-derive-instruction/test-suite/4/test4.ml
+Passed: /.../ochacaml4d-instruction/test-suite/4/test4.ml
 33 test(s) passed
 0 test(s) failed
 ```
