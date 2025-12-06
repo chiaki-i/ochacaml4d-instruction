@@ -27,7 +27,7 @@ let apnd t0 t1 = match t0 with
 let rec f e xs vs c t m =
   match e with
     Num (n) -> c (VNum (n)) t m
-  | Var (x) -> c (List.nth vs (Env.offset x xs)) t m
+  | Var (x) -> c (List.nth vs (Env.off_set x xs)) t m
   | Op (e0, op, e1) ->
     f e1 xs vs (fun v1 t0 m0 ->
         f e0 xs vs (fun v0 t1 m1 ->
@@ -75,19 +75,21 @@ and f_s e2s xs vs c t m = match e2s with
       f e xs vs (fun v1 t1 m1 ->
         c (v1 :: v2s) t1 m1) t2 m2) t m
 
-(* app : v -> v -> c -> t -> m -> v *)
-and app v0 v1 c t m = match v0 with
-    VFun (f) -> f v1 c t m
-  | VContS (c', t') -> c' v1 t' (MCons ((c, t), m))
-  | VContC (c', t') -> c' v1 (apnd t' (cons c t)) m
+(* app : v -> v -> v list -> c -> t -> m -> v *)
+and app v0 v1 v2s' c t m =
+  let app_c = fun v t m -> app_s v v2s' c t m in
+  match v0 with
+    VFun (f) -> f v1 app_c t m
+    (* VFun (f) -> f v1 (fun v t m -> app_s v v2s' c t m) t m *)
+  | VContS (c', t') -> c' v1 t' (MCons ((app_c, t), m))
+  | VContC (c', t') -> c' v1 (apnd t' (cons app_c t)) m
   | _ -> failwith (to_string v0
                    ^ " is not a function; it can not be applied.")
 
 (* app_s : v -> v list -> c -> t -> m -> v *)
 and app_s v0 v2s c t m = match v2s with
     [] -> c v0 t m
-  | v1 :: v2s -> app v0 v1 (fun v t m ->
-                   app_s v v2s c t m) t m
+  | v1 :: v2s -> app v0 v1 v2s c t m
 
 (* f_init : e -> v *)
 let f_init expr = f expr [] [] idc TNil MNil

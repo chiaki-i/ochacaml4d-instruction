@@ -1,6 +1,6 @@
 open Syntax
 
-(* defunctionalize eval8st: eval9st *)
+(* Definitional interpreter for λ-calculus with 4 delimited continuation operations : eval1 *)
 
 (* Value *)
 type v = VNum of int
@@ -12,23 +12,21 @@ type v = VNum of int
 and c = C0
       | CSeq of i * v list * c
 
-and i = IPush
-      | IPushmark
-      | INum of int
-      | IAccess of int
-      | IOp of op
-      | IApply
-      | IReturn
-      | ICur of i
-      | IGrab of i
-      | ISeq of i * i
+and i = ISeq of i * i
+      | IPushmark | ISkip
+      | INum of int | IAccess of int | IOp of op
+      | IApply | IReturn
+      | ICur of i | IGrab of i
       | IShift of i | IControl of i
       | IShift0 of i | IControl0 of i
       | IReset of i
 
 and s = v list
 
-and t = TNil | Trail of (v -> t -> m -> v)
+and t = TNil | Trail of h
+
+and h = Hold of c * s
+      | Append of h * h
 
 and m = MNil | MCons of (c * s * t) * m
 

@@ -1,6 +1,6 @@
 open Syntax
 
-(* linearize eval9st1: eval10st *)
+(* Definitional interpreter for λ-calculus with 4 delimited continuation operations : eval1 *)
 
 (* Value *)
 type v = VNum of int
@@ -11,22 +11,20 @@ type v = VNum of int
 
 and c = (i list * v list) list
 
-and i = IPush
-      | IPushmark
-      | INum of int
-      | IAccess of int
-      | IOp of op
-      | IApply
-      | IReturn
-      | ICur of i list
-      | IGrab of i list
+and i = IPushmark
+      | INum of int | IAccess of int | IOp of op
+      | IApply | IReturn
+      | ICur of i list | IGrab of i list
       | IShift of i list | IControl of i list
       | IShift0 of i list | IControl0 of i list
       | IReset of i list
 
 and s = v list
 
-and t = TNil | Trail of (v -> t -> m -> v)
+and t = TNil | Trail of h
+
+and h = Hold of c * s
+      | Append of h * h
 
 and m = MNil | MCons of (c * s * t) * m
 

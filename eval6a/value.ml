@@ -1,6 +1,6 @@
 open Syntax
 
-(* interpreter with arg stack, with value on top of it: eval7st *)
+(* Definitional interpreter for λ-calculus with 4 delimited continuation operations : eval1 *)
 
 (* Value *)
 type v = VNum of int

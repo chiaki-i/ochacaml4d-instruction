@@ -7,7 +7,7 @@ let go () =
     print_newline ();
     print_string "Result : "
   end;
-  print_string (Value.to_string (Eval.f program)) ;(* result *)
+  print_string (Value.to_string (Eval.f_init program)) ;(* result *)
   print_newline ()
 
 (* startup *)

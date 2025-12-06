@@ -1,6 +1,6 @@
 open Syntax
 
-(* interpreter with defunctionalized continuations: eval2st *)
+(* Definitional interpreter for λ-calculus with 4 delimited continuation operations : eval1 *)
 
 (* Value *)
 type v = VNum of int
@@ -9,9 +9,9 @@ type v = VNum of int
        | VContC of c * t
 
 and c = C0
-      | CApp of v list * c
-      | CApp1 of v * v list * c
-      | CAppS0 of v list * c
+      | CApp1 of v list * c
+      | CApp2 of v list * c
+      | CApp3 of v list * c
       | CAppS1 of e * string list * v list * c
       | CAppS2 of e * string list * v list * c
       | COp0 of v * op * c
@@ -27,6 +27,17 @@ let rec to_string value = match value with
   | VFun (_) -> "<VFun>"
   | VContS (_) -> "<VContS>"
   | VContC (_) -> "<VContC>"
+
+(* s_to_string : s -> string *)
+let rec s_to_string s =
+  "[" ^
+  begin match s with
+    [] -> ""
+  | first :: rest ->
+    to_string first ^
+    List.fold_left (fun str v -> str ^ "; " ^ to_string v) "" rest
+  end
+  ^ "]"
 
 (* Value.print : v -> unit *)
 let print exp =

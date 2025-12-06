@@ -1,6 +1,6 @@
 open Syntax
 
-(* Interpreter using combinators factored as instructions : eval8st *)
+(* Definitional interpreter for λ-calculus with 4 delimited continuation operations : eval1 *)
 
 (* Value *)
 type v = VNum of int

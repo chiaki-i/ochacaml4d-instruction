@@ -5,8 +5,8 @@ let empty = []
 (* exceptions *)
 exception UnboundVariable
 
-(* offset : string -> xs -> int *)
-let offset x xs =
+(* off_set : string -> xs -> int *)
+let off_set x xs =
   let rec loop xs n = match xs with
       [] -> raise UnboundVariable
     | first :: rest -> if x = first then n else loop rest (n + 1)
