@@ -1,6 +1,8 @@
 open Syntax
 open Value
 
+let silent = ref false
+
 (* Definitional interpreter for (λ-calculus with 4 delimited continuation operations : eval1s *)
 
 (* initial continuation : c *)
@@ -22,7 +24,9 @@ let rec run_h h v t m = match h with
   | Append (h, h') -> run_h h v (cons h' t) m
 
 (* run_c : c -> s -> t -> m -> v *)
-and run_c c s t m = match (c, s) with
+and run_c c s t m =
+  if not !silent then print_machine c s t m;
+  match (c, s) with
     ([], v :: []) ->
     begin match t with
         TNil ->

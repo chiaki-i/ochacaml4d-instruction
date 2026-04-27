@@ -72,3 +72,54 @@ Passed: /.../ochacaml4d-instruction/test-suite/4/test4.ml
 33 test(s) passed
 0 test(s) failed
 ```
+
+## Machine state display (eval10b)
+
+`eval10b` prints the abstract machine state at each reduction step when invoked directly.
+Each block shows the six components of the machine state:
+
+| Field | Description |
+|-------|-------------|
+| `i`   | Remaining instructions in the current frame |
+| `e`   | Environment (value list) of the current frame |
+| `s`   | Value stack |
+| `r`   | Return stack (remaining frames) |
+| `t`   | Trail |
+| `m`   | Meta-continuation |
+
+```bash
+$ cd eval10b
+$ make
+$ ./interpreter
+(fun f -> (fun z -> f (z + 4)) 2 3) (fun x -> fun y -> x * y)
+```
+(press Control-D)
+```
+Parsed : ((fun f -> ((fun z -> (f (z + 4))) 2 3)) (fun x -> (fun y -> (x * y))))
+Result : i: Pushmark; Cur (Grab (Access (0); Access (1); Op (*); Return)); Cur (Num (3); Num (2); Cur (Num (4); Access (0); Op (+); Access (1); Apply); Apply); Apply
+e: []
+s: []
+r: ●
+t: ●
+m: ●
+--------------------
+i: Cur (Grab (Access (0); Access (1); Op ( * ); Return)); Cur (Num (3); Num (2); Cur (Num (4); Access (0); Op ( + ); Access (1); Apply); Apply); Apply
+e: []
+s: [<ε>]
+r: ●
+t: ●
+m: ●
+--------------------
+... (intermediate steps omitted) ...
+--------------------
+i: ●
+e: ●
+s: [18]
+r: ●
+t: ●
+m: ●
+--------------------
+18
+```
+
+`make test` passes `-no-message` to the interpreter, which suppresses the machine-state output so that only the final result is compared against the expected output.

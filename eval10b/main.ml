@@ -1,5 +1,6 @@
 (* main *)
 let go () =
+  if Array.mem "-no-message" Sys.argv then Eval.silent := true;
   let program = Parser.expr Lexer.token (Lexing.from_channel stdin) in
   if Array.length Sys.argv = 1 then begin
     print_string "Parsed : ";
